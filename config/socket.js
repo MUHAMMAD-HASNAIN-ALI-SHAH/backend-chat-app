@@ -13,21 +13,18 @@ const io = new Server(server, {
   },
 });
 
+const userSocketMap = {};
+
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  socket.on("joinRoom", (room) => {
-    socket.join(room);
-    console.log(`User ${socket.id} joined room: ${room}`);
-  });
-
-  socket.on("sendMessage", (data) => {
-    const { room, message } = data;
-    io.to(room).emit("receiveMessage", message);
-    console.log(`Message sent to room ${room}: ${message}`);
-  });
+  const userId = socket.handshake.query.userId;
+  if (userId) userSocketMap[userId] = socket.id;
 
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
+    delete userSocketMap[userId];
   });
 });
+
+module.exports = { app, server, io };
