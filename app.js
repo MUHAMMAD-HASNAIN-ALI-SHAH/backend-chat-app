@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 8081;
 const CLIENT_URL = process.env.CLIENT_URL;
 const { app, server } = require("./config/socket.js");
 
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 app.use(
   cors({
