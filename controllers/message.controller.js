@@ -1,10 +1,11 @@
+const { getRecieverSocketId, io } = require("../config/socket");
 const Message = require("../models/message.model");
+const cloudinary = require("../config/cloudinary.js");
 
 const sendMessage = async (req, res) => {
   try {
-    const { text, image, chatId } = req.body;
-    const { id: receiverId } = req.params;
-    const senderId = req.user._id;
+    const { text, image, chatId, recieverId } = req.body;
+    const userId = req.user._id;
 
     let imageUrl;
     if (image) {
@@ -13,8 +14,8 @@ const sendMessage = async (req, res) => {
     }
 
     const newMessage = new Message({
-      senderId,
-      receiverId,
+      userId,
+      recieverId,
       chatId,
       text,
       image: imageUrl,
@@ -22,8 +23,10 @@ const sendMessage = async (req, res) => {
 
     await newMessage.save();
 
-    const receiverSocketId = getReceiverSocketId(receiverId);
-    io.to(receiverSocketId).emit("newMessages", newMessage);
+    const receiverSocketId = getRecieverSocketId(recieverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessages", newMessage);
+    }
 
     res.status(200).json(newMessage);
   } catch (error) {
@@ -41,8 +44,6 @@ const getMessages = async (req, res) => {
     if (!messages) {
       return res.status(200).json({ message: [] });
     }
-
-    console.log("Messages fetched successfully:", messages);
 
     res.status(200).json({ messages });
   } catch (error) {
