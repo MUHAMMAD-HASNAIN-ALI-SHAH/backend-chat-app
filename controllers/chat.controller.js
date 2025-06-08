@@ -85,63 +85,6 @@ const newChat = async (req, res) => {
   }
 };
 
-// Send a message in an existing chat
-const sendMessage = async (req, res) => {
-  try {
-    const { chatId, text } = req.body;
-    const { userId } = req.user;
-
-    const chat = await Chat.findById(chatId);
-    if (!chat) {
-      return res.status(404).json({ message: "Chat not found" });
-    }
-
-    const receiverId =
-      chat.firstUserId.toString() === userId
-        ? chat.secondUserId
-        : chat.firstUserId;
-
-    const message = await Message.create({
-      userId: userId,
-      recieverId: receiverId,
-      chatId: chatId,
-      text: text,
-      isRead: false,
-    });
-
-    chat.lastMessage = text;
-    chat.lastMessageTime = Date.now();
-    await chat.save();
-
-    const recieverSocketId = getRecieverSocketId(receiverId);
-    if (recieverSocketId) {
-      io.to(recieverSocketId).emit("receive-message", {
-        chatId,
-        message,
-      });
-    }
-
-    res
-      .status(200)
-      .json({ message: "Message sent successfully", data: message });
-  } catch (error) {
-    console.error("Error in sending message:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-// Get all messages for a chat
-const getMessages = async (req, res) => {
-  try {
-    const { chatId } = req.params;
-    const messages = await Message.find({ chatId }).sort({ createdAt: 1 });
-    res.status(200).json({ messages });
-  } catch (error) {
-    console.error("Error in fetching messages:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
 // Get all chats of the current user
 const getChats = async (req, res) => {
   try {
@@ -164,7 +107,5 @@ const getChats = async (req, res) => {
 module.exports = {
   findUser,
   newChat,
-  sendMessage,
-  getMessages,
   getChats,
 };

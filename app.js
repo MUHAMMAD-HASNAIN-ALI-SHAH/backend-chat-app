@@ -19,6 +19,7 @@ app.use(
 
 app.use("/api/auth", require("./routes/auth.route.js"));
 app.use("/api/chat", require("./routes/chat.route.js"));
+app.use("/api/message", require("./routes/message.route.js"));
 
 connectDB().then(() => {
   server.listen(PORT, () => {
